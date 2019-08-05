@@ -1,90 +1,90 @@
 const
+    // User Editable Parameters
+    allowedUpdates = [
+        'firstName',
+        'lastName',
+        'email',
+        'age',
+        'password'
+    ],
+    paths = {
+        ROUTE_userSignup: '/users/signup',
+        ROUTE_userLogin: '/users/login',
+        ROUTE_userLogout: '/users/logout',
+        ROUTE_keychainDestroy: '/users/logoutAll',
+        ROUTE_userHome: '/users',
+        ROUTE_userProfile: '/users/me'
+
+    },
+    // Dont Touch it
     express = require('express'),
     User = require('../models/users'),
+    usersAPI = require('../api/users/users-apiTCWrapper')(),
+    auth = require('../middleware/auth').auth,
     router = new express.Router();
 
-//Create User
-router.post('/users', async (req, res) => {
-    const user = new User(req.body);
-    try {
-        await user.save();
-        res.status(201).send(user);
-    } catch (e) {
-        res.status(404).send(e);
-    }
-});
+//User Management API
+  //Sign Up User
+  router.post(
+      paths.ROUTE_userSignup,
+      async (req, res) => usersAPI.userSignup(User, { payload: req.body }, res)
+  );
 
-//Read Users
-router.get('/users', async (req, res) => {
-    const users = await User.find({});
-    try {
-        if (!users) {
-            return res.status(404).send('No Users Found');
-        }
-        return res.status(200).send(users);
-    } catch (e) {
-        return res.status(500).send(e);
-    }
-});
+  //Login User
+  router.post(
+      paths.ROUTE_userLogin,
+      async (req, res) => usersAPI.userLogin(User, { email: req.body.email, password: req.body.password }, res)
+  );
 
-//Read User
-router.get('/users/:userId', async (req, res) => {
-    const userId = req.params.userId;
-    try {
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).send('No User Found With That Id');
-        }
-        res.status(200).send(user);
-    } catch (e) {
-        res.status(500).send(e);
-    }
-});
+  //Logout User
+  router.post(
+      paths.ROUTE_userLogout,
+      auth,
+      async (req, res) => usersAPI.userLogout({ tokens: req.user.tokens, token: req.token, userObj: req.user}, res)
+  );
 
-//Update User
-router.patch('/users/:userId', async (req, res) => {
-    const
-        userId = req.params.userId,
-        updateOptions = req.body,
-        fxnOptions = {
-            new: true,
-            runValidators: true
-        },
-        allowedUpdates = [
-            'firstName',
-            'lastName',
-            'email',
-            'age'
-        ],
-        proposedUpdates = Object.keys(updateOptions),
-        isValidOperationRequest = proposedUpdates.every(attemptedUpdate => allowedUpdates.includes(attemptedUpdate));
-    if (!isValidOperationRequest) {
-        return res.status(400).send({ error: "Invalid Request Sent!"});
-    }
+  //Destroy All Login Tokens for the User
+  router.post(
+      paths.ROUTE_keychainDestroy,
+      auth,
+      async (req, res) => usersAPI.destroyUserKeyChain({userObj: req.user}, res)
+  );
 
-    try {
-        const user = await User.findByIdAndUpdate(userId, updateOptions, fxnOptions);
-        if (!user) {
-            return res.status(404).send('No User Found To Update');
-        }
-        res.status(200).send(user);
-    } catch (e) {
-        return res.status(400).send(e);
-    }
-});
+//Mongo CRUD API - For Direct API Use.  Keep Disabled Unless Testing.
+/*  //Create User
+  router.post(
+      paths.ROUTE_userHome,
+      auth,
+      async (req, res) => usersAPI.createNewUser(User, { payload: req.body }, res, false)
+  );*/
 
-//Delete User
-router.delete('/users/:userId', async (req, res) => {
-    const userId = req.params.userId;
-    try {
-        const user = await User.findByIdAndDelete(userId);
-        if (!user) {
-            res.send(404).send({ error: `User ${userId} Not Found!` });
-        }
-        res.send(user);
-    } catch (e) {
-        res.status(500).send(e);
-    }
-});
+  //Read User Profile
+  router.get(
+      paths.ROUTE_userProfile,
+      auth,
+      async (req, res) => usersAPI.getProfileDetails(
+          User,
+          { owner: req.user._id },
+          res
+      )
+  );
+
+  //Update User
+  router.patch(
+      paths.ROUTE_userProfile,
+      auth,
+      async (req, res) => usersAPI.updateUserProfile(
+          User,
+          { payload: req.body, owner: req.user._id, allowedUpdates },
+          res
+      )
+  );
+
+  //Delete User
+  router.delete(
+      paths.ROUTE_userProfile,
+      auth,
+      async (req, res) => usersAPI.deleteUserProfile({ user: req.user }, res)
+  );
 
 module.exports = router;

@@ -3,6 +3,7 @@ const
     app = express(),
     PORT = process.env.PORT || 3050;
 
+//Start the MongoDB
 require('./db/mongoose');
 
 const
