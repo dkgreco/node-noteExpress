@@ -25,14 +25,31 @@ const
 
         //Read All Tasks
         async function _read (Model, data, res) {
-            const { owner } = data,
-                list = await Model.find({ owner });
+            const
+                { req } = data,
+                match = {},
+                sort = {};
 
-            if (!list) {
-                return res.status(code404).send(`Unable to locate ${Model.inspect()}`);
+            if (req.query.isComplete) {
+                match.isComplete = req.query.isComplete === 'true';
             }
 
-            return res.status(code200).send(list);
+            if (req.query.sortBy) {
+                const parts = req.query.sortBy.split(':');
+                sort[parts[0]] = parts[1] === 'desc' ? -1 : 1;
+            }
+
+            await req.user.populate({
+                path: 'tasks',
+                match,
+                options: {
+                    limit: parseInt(req.query.limit),
+                    skip: parseInt(req.query.skip),
+                    sort
+                }
+            }).execPopulate();
+
+            return res.status(code200).send(req.user.tasks);
         }
 
         //Read Single Task

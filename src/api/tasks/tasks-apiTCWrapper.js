@@ -25,7 +25,7 @@ const
 
         //Read All Tasks
         async function _read (Model, data, res) {
-            const { owner } = data;
+            const { owner, req } = data;
             await tryItAPI.tryIt(
                 tasksAPI.readTasks,
                 {
@@ -33,7 +33,8 @@ const
                     errMsg: "Unable to Fetch Task List.",
                     Model,
                     payload: {
-                        owner
+                        owner,
+                        req
                     }
                 },
                 res

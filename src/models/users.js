@@ -72,6 +72,8 @@ const
                 }
             }
         ]
+    }, {
+        timestamps: true
     });
 
 userSchema.virtual('tasks', {

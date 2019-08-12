@@ -7,6 +7,7 @@ const
     getManagementConsole = () => {
         //Sign Up c500
         async function _signup (Model, data, res) {
+            console.log('inside signup api');
                 const
                    user = await _create(Model, { data }, res),
                    jwtIssuedToken = await user.generateAuthToken();

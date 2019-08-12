@@ -6,6 +6,7 @@ const
     getManagementConsole = () => {
         //Sign Up
         async function _signup (Model, data, res) {
+            console.log('inside signup wrapper');
             await tryItAPI.tryIt(
                 usersAPI.userSignup,
                 {

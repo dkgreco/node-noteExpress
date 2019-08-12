@@ -27,7 +27,7 @@ router.post(
 router.get(
     paths.ROUTE_taskHome,
     auth,
-    async (req, res) => taskAPI.readTasks(Task, { owner: req.user._id },  res)
+    async (req, res) => taskAPI.readTasks(Task, { req, owner: req.user._id },  res)
 );
 
 //Read Individual Task
