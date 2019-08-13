@@ -13,11 +13,27 @@ const
         ROUTE_userLogout: '/users/logout',
         ROUTE_keychainDestroy: '/users/logoutAll',
         ROUTE_userHome: '/users',
-        ROUTE_userProfile: '/users/me'
-
+        ROUTE_userProfile: '/users/me',
+        ROUTE_userAvatar: '/users/me/avatar',
+        ROUTE_getUserAvatar: '/users/:id/avatar'
     },
+    allowableFileUploadTypes = /\.(tif|tiff|gif|jpeg|jpg|jif|jfif|jp2|jpx|j2k|j2c|fpx|pcd|png|pdf)$/,
     // Dont Touch it
     express = require('express'),
+    multer = require('multer'),
+    uploadAvatar = multer({
+        limits: {
+            fileSize: 1000000
+        },
+        fileFilter(req, file, cb) {
+            if (!file.originalname.match(allowableFileUploadTypes)) {
+                cb(new Error('You must upload an image file.'));
+            }
+
+            cb(undefined, true);
+            //Silently Reject the call::cb(undefined, false);
+        }
+    }),
     User = require('../models/users'),
     usersAPI = require('../api/users/users-apiTCWrapper')(),
     auth = require('../middleware/auth').auth,
@@ -51,18 +67,18 @@ const
   );
 
 //Mongo CRUD API - For Direct API Use.  Keep Disabled Unless Testing.
-/*  //Create User
-  router.post(
-      paths.ROUTE_userHome,
-      auth,
-      async (req, res) => usersAPI.createNewUser(User, { payload: req.body }, res, false)
-  );*/
+  //Get User Avatar
+  router.get(
+      paths.ROUTE_getUserAvatar,
+      async (req, res) => usersAPI.getUserAvatar(User, { owner: req.params.id }, res),
+      (error, req, res, next) => res.status(404).send({ error: error.message })
+  );
 
   //Read User Profile
   router.get(
       paths.ROUTE_userProfile,
       auth,
-      async (req, res) => usersAPI.getProfileDetails(
+      async (req, res) => usersAPI.getUserProfile(
           User,
           { owner: req.user._id },
           res
@@ -80,7 +96,23 @@ const
       )
   );
 
-  //Delete User
+  //Upload User Avatar
+  router.post(
+      paths.ROUTE_userAvatar,
+      auth,
+      uploadAvatar.single('avatar'),
+      async (req, res) => usersAPI.uploadUserAvatar({ user: req.user, fileData: req.file.buffer }, res),
+      (error, req, res, next) => res.status(404).send({ error: error.message })
+  );
+
+  //Delete User Avatar
+  router.delete(
+      paths.ROUTE_userAvatar,
+      auth,
+      async (req, res) => usersAPI.deleteUserAvatar({ user: req.user }, res)
+  );
+
+  //Delete User Profile
   router.delete(
       paths.ROUTE_userProfile,
       auth,

@@ -6,7 +6,6 @@ const
     getManagementConsole = () => {
         //Sign Up
         async function _signup (Model, data, res) {
-            console.log('inside signup wrapper');
             await tryItAPI.tryIt(
                 usersAPI.userSignup,
                 {
@@ -87,11 +86,28 @@ const
             );
         }
 
+        // Get User Avatar
+        async function _readAvatar (Model, data, res) {
+            const { owner } = data;
+            await tryItAPI.tryIt(
+                usersAPI.getUserAvatar,
+                {
+                    errCode: code500,
+                    errMsg: "Unable to Fetch User Avatar.",
+                    Model,
+                    payload: {
+                        owner
+                    }
+                },
+                res
+            )
+        }
+
         // Get User Profile
         async function _readInd (Model, data, res) {
             const { owner } = data;
             await tryItAPI.tryIt(
-                usersAPI.getProfileDetails,
+                usersAPI.getUserProfile,
                 {
                     errCode: code500,
                     errMsg: "Unable to Fetch User Profile.",
@@ -123,6 +139,43 @@ const
             );
         }
 
+        //Update User Profile
+        async function _uploadUserAvatar (data, res) {
+            const { user, fileData } = data;
+
+            await tryItAPI.tryIt(
+                usersAPI.uploadUserAvatar,
+                {
+                    errCode: code500,
+                    errMsg: "Unable to Update User Avatar.",
+                    Model: 'No Model Passed',
+                    payload: {
+                        user,
+                        fileData
+                    }
+                },
+                res
+            );
+        }
+
+        //Delete User Avatar
+        async function _deleteAvatar (data, res) {
+
+            const { user } = data;
+            await tryItAPI.tryIt(
+                usersAPI.deleteUserAvatar,
+                {
+                    errCode: code500,
+                    errMsg: "Unable to Delete User Avatar.",
+                    Model: 'No Model Passed',
+                    payload: {
+                        user
+                    }
+                },
+                res
+            )
+        }
+
         //Delete User Profile
         async function _delete (data, res) {
             const { user } = data;
@@ -146,8 +199,11 @@ const
             userSignup: _signup,
             destroyUserKeyChain: _logoutDeleteKeyChain,
             createNewUser: _create,
-            getProfileDetails: _readInd,
+            getUserAvatar: _readAvatar,
+            getUserProfile: _readInd,
+            uploadUserAvatar: _uploadUserAvatar,
             updateUserProfile: _update,
+            deleteUserAvatar: _deleteAvatar,
             deleteUserProfile: _delete
         };
     };

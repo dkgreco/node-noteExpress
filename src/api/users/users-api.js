@@ -4,6 +4,7 @@ const
     code201 = 201,
     code400 = 400,
     code404 = 404,
+    sharp = require('sharp'),
     getManagementConsole = () => {
         //Sign Up c500
         async function _signup (Model, data, res) {
@@ -70,6 +71,21 @@ const
             return res.status(code201).send(obj);
         }
 
+        // Get User Avatar - 500
+        async function _readAvatar (Model, data, res) {
+            const
+                { owner } = data,
+                obj = await Model.findById(owner);
+
+            if (!obj || !obj.avatar) {
+                return res.status(code404).send(`Unable to fetch Avatar for User: [${owner}]`);
+            }
+
+            res.set('Content-Type', 'image/png');
+
+            return res.send(obj.avatar);
+        }
+
         // Get User Profile - 500
         async function _readInd (Model, data, res) {
             const
@@ -102,6 +118,31 @@ const
             return res.status(code200).send(obj);
         }
 
+        //Upload User Avatar c400
+        async function _uploadUserAvatar (Model, data, res) {
+            const
+                { user, fileData } = data;
+            let obj = user,
+                transform = await sharp(fileData).resize({ width: 250, height: 250 }).png().toBuffer();
+
+            obj.avatar = transform;
+
+            await obj.save();
+
+            return res.status(code200).send();
+        }
+
+        //Delete User Avatar - 500
+        async function _deleteAvatar (Model, data, res) {
+            const { user } = data;
+
+            let obj =  user;
+            obj.avatar = undefined;
+            await obj.save();
+
+            return res.status(code200).send(obj);
+        }
+
         //Delete User Profile - 500
         async function _delete (Model, data, res) {
             const { user } = data;
@@ -116,8 +157,11 @@ const
             userSignup: _signup,
             destroyUserKeyChain: _logoutDeleteKeyChain,
             createNewUser: _create,
-            getProfileDetails: _readInd,
+            getUserAvatar: _readAvatar,
+            getUserProfile: _readInd,
             updateUserProfile: _update,
+            uploadUserAvatar: _uploadUserAvatar,
+            deleteUserAvatar: _deleteAvatar,
             deleteUserProfile: _delete
         };
     };

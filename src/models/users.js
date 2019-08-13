@@ -71,7 +71,10 @@ const
                     required: true
                 }
             }
-        ]
+        ],
+        avatar: {
+            type: Buffer
+        }
     }, {
         timestamps: true
     });
@@ -90,6 +93,7 @@ userSchema.methods.toJSON = function() {
 
     delete userObj.password;
     delete userObj.tokens;
+    delete userObj.avatar;
 
     return userObj;
 };
@@ -99,7 +103,7 @@ userSchema.methods.generateAuthToken = async function () {
     const
         user = this,
         jwtToken = jwt.sign({ _id: user._id.toString() }, 'Crystals123');
-    console.log('Token generated: ', jwtToken);
+
     user.tokens = user.tokens.concat({ token: jwtToken });
     await user.save();
 
