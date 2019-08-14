@@ -4,7 +4,7 @@ const
     validator = require('validator'),
     bcrypt = require('bcryptjs'),
     jwt = require('jsonwebtoken'),
-    passwordsBlacklist = require('../../config/passwords/blacklist'),
+    passwordsBlacklist = require('../../src/api/users/passwd_blacklist'),
     Tasks = require('../models/tasks'),
     userSchema = new mongoose.Schema({
         firstName: {
