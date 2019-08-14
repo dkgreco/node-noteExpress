@@ -1,6 +1,8 @@
-const mongoose = require('mongoose');
+const
+    mongoose = require('mongoose'),
+    SERVER = process.env.DB_SERVER_URL;
 
-mongoose.connect('mongodb://127.0.0.1:27017/task-manager-api', {
+mongoose.connect(SERVER, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false

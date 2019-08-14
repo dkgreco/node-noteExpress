@@ -8,14 +8,20 @@ const
     getManagementConsole = () => {
         //Sign Up c500
         async function _signup (Model, data, res) {
-            console.log('inside signup api');
                 const
-                   user = await _create(Model, { data }, res),
-                   jwtIssuedToken = await user.generateAuthToken();
+                    user = await _create(Model, { data }, res),
+                    { sendWelcomeEmail } = require('../../emails/account'),
+                    jwtIssuedToken = await user.generateAuthToken();
 
                 if (!user) {
                     return res.status(code404).send(`Unable to Create ${data} within ${Model.inspect()}`);
                 }
+
+                sendWelcomeEmail({
+                    email: user.email,
+                    fName: user.firstName,
+                    lName: user.lastName
+                });
 
                 return res.status(code201).send({
                     user,
@@ -61,14 +67,14 @@ const
             let obj = new Model({
                 ...data.data
             });
-            console.log('obj: ', obj);
+
             await obj.save();
 
             if (!obj) {
                 return res.status(code404).send(`Unable to create ${payload} within ${Model.inspect()}`);
             }
 
-            return res.status(code201).send(obj);
+            return obj;
         }
 
         // Get User Avatar - 500
@@ -145,7 +151,15 @@ const
 
         //Delete User Profile - 500
         async function _delete (Model, data, res) {
-            const { user } = data;
+            const
+                { user } = data,
+                { sendGoodbyeEmail } = require('../../emails/account');
+
+            sendGoodbyeEmail({
+                email: user.email,
+                fName: user.firstName
+            });
+
             let obj =  user.remove();
 
             return res.status(code200).send(obj);

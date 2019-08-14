@@ -1,7 +1,7 @@
 const
     express = require('express'),
     app = express(),
-    PORT = process.env.PORT || 3050;
+    PORT = process.env.PORT;
 
 //Start the MongoDB
 require('./db/mongoose');
